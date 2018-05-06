@@ -11,7 +11,8 @@ public class FeAllImport {
 
   public void languageImport(String projectPath)
       throws IOException, ConfigurationException, SQLException, ClassNotFoundException {
-    ConfigurationModel configurationModel= FileUtil.readConfigurationModel();
+    FileUtil fileUtil = new FileUtil();
+    ConfigurationModel configurationModel= fileUtil.readConfigurationModel();
     DbUtil dbUtil = new DbUtil(configurationModel);
 
     ProjectImport projectImport = new ProjectImport(dbUtil);
