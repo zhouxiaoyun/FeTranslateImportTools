@@ -1,4 +1,4 @@
-package com.zhkeen.flyrise.fe.translate.baidu;
+package com.zhkeen.flyrise.fe.translate.util.baidu;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;

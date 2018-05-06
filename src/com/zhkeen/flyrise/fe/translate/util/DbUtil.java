@@ -1,12 +1,14 @@
-package com.zhkeen.flyrise.fe.translate;
+package com.zhkeen.flyrise.fe.translate.util;
 
-import com.zhkeen.flyrise.fe.translate.baidu.TransApi;
+import com.zhkeen.flyrise.fe.translate.util.baidu.TransApi;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.Map;
 import java.util.Random;
 
 public class DbUtil {
@@ -37,33 +39,43 @@ public class DbUtil {
     return connection;
   }
 
-  public void insert(String message) throws SQLException {
+  public void insert(String message) throws SQLException, UnsupportedEncodingException {
     String selectSql = String
-        .format("SELECT ID FROM %s WHERE zh_CN = ?", TABLE_TRANSLATE);
+        .format("SELECT ID FROM %s WHERE zh = ?", TABLE_TRANSLATE);
     PreparedStatement pstmt = connection.prepareStatement(selectSql);
     pstmt.setString(1, message);
     ResultSet rs = pstmt.executeQuery();
     if (!rs.next()) {
-      String insertSql = String
-          .format("INSERT %s(ID,zh_CN,zh_TW,en) VALUES(?,?,?,?)", TABLE_TRANSLATE);
-      PreparedStatement psInsert = connection.prepareStatement(insertSql);
-      String enMessage = "";
-      String twMessage = "";
-      try {
-        enMessage = transApi.getTransResult(message, "zh", "en");
-        twMessage = ZHConverter.convert(message, ZHConverter.TRADITIONAL);
-      } catch (Exception e) {
-        e.printStackTrace();
+      TransApi transApi = new TransApi(APP_ID, SECURITY_KEY);
+      String insertSql =
+          "INSERT INTO " + TABLE_TRANSLATE + "(ID, " + getSearchField(Constants.ALL_LANGUAGE_MAP)
+              + ") VALUES(";
+      int j = Constants.ALL_LANGUAGE_MAP.size();
+      for (int i = 0; i < j; i++) {
+        insertSql = insertSql + "?,";
       }
+      insertSql = insertSql + "?)";
+      PreparedStatement psInsert = connection.prepareStatement(insertSql);
       psInsert.setLong(1, new Date().getTime() * 1000 + new Random().nextInt(1000));
-      psInsert.setString(2, message);
-      psInsert.setString(3, twMessage);
-      psInsert.setString(4, enMessage);
+      int m = 2;
+      for (String lang : Constants.ALL_LANGUAGE_MAP.keySet()) {
+        psInsert.setString(m, transApi.getTransResult(message,"zh", lang));
+        m++;
+      }
       psInsert.execute();
     }
   }
 
   public void close() throws SQLException {
     connection.close();
+  }
+
+  private String getSearchField(Map<String, String> supportLanguageMap) {
+    String field = "";
+    for (String lang : supportLanguageMap.keySet()) {
+      field = field + lang + ",";
+    }
+    field = field.substring(0, field.length() - 1);
+    return field;
   }
 }

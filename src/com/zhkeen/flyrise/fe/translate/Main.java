@@ -6,7 +6,7 @@ import java.sql.SQLException;
 public class Main {
 
   public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException {
-    FormUtil formUtil = new FormUtil();
-    formUtil.generateLanguage(args[0]);
+    ProjectUtil projectUtil = new ProjectUtil();
+    projectUtil.generateLanguage(args[0]);
   }
 }

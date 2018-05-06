@@ -1,4 +1,4 @@
-package com.zhkeen.flyrise.fe.translate.baidu;
+package com.zhkeen.flyrise.fe.translate.util.baidu;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
