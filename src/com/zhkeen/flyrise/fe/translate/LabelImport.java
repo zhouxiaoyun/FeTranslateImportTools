@@ -1,5 +1,5 @@
 package com.zhkeen.flyrise.fe.translate;
 
-public class LabelUtil {
+public class LabelImport {
 
 }

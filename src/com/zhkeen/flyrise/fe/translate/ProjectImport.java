@@ -10,16 +10,15 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ProjectUtil {
+public class ProjectImport {
 
   private DbUtil dbUtil;
-  private Connection connection;
 
-  public ProjectUtil() {
-    dbUtil = new DbUtil();
+  public ProjectImport(DbUtil dbUtil) {
+    this.dbUtil = dbUtil;
   }
 
-  public void generateLanguage(String path)
+  public void languageImport(String path)
       throws IOException, SQLException, ClassNotFoundException {
     File baseDir = new File(path);
     if (baseDir.exists() && baseDir.isDirectory()) {
@@ -31,14 +30,15 @@ public class ProjectUtil {
     for (File file : dir.listFiles()) {
       if (file.isDirectory()) {
         loopDir(file);
-      } else if (file.getName().endsWith(".java") || file.getName().endsWith(".js") || file.getName()
+      } else if (file.getName().endsWith(".java") || file.getName().endsWith(".js") || file
+          .getName()
           .endsWith(".html") || file.getName().endsWith(".jsp")) {
         findCn(file);
       }
     }
   }
 
-  public  void findCn(File file) throws IOException, SQLException {
+  public void findCn(File file) throws IOException, SQLException {
     if (file.isFile()) {
       Pattern pattern = Pattern.compile("(\"[\u4e00-\u9fa5]{1,}\")|(\'[\u4e00-\u9fa5]{1,}\')");
       BufferedReader reader = new BufferedReader(new FileReader(file));

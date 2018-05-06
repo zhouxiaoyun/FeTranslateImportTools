@@ -1,0 +1,9 @@
+package com.zhkeen.flyrise.fe.translate.util;
+
+public class ConfigurationException extends Exception {
+
+  public ConfigurationException(String message) {
+    super(message);
+  }
+
+}
