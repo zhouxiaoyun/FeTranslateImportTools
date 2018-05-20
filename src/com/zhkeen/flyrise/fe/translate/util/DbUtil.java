@@ -36,34 +36,45 @@ public class DbUtil {
     return connection;
   }
 
-  public long insert(String message)
+  public String insert(String message, String isJS)
       throws SQLException, UnsupportedEncodingException {
     String selectSql = String
-        .format("SELECT ID FROM %s WHERE %s = ?", TABLE_TRANSLATE, defaultLanguage);
+        .format("SELECT ID,ISJS FROM %s WHERE %s = ?", TABLE_TRANSLATE, defaultLanguage);
     PreparedStatement pstmt = connection.prepareStatement(selectSql);
     pstmt.setString(1, message);
     ResultSet rs = pstmt.executeQuery();
     if (!rs.next()) {
-      long id = LanguageIdUtil.generateId();
+      String id = LanguageIdUtil.generateId();
       String insertSql =
-          "INSERT INTO " + TABLE_TRANSLATE + "(ID, " + getSearchField(supportLanguage)
-              + ") VALUES(";
+          "INSERT INTO " + TABLE_TRANSLATE + "(ID, ISJS," + getSearchField(supportLanguage)
+              + ", LASTUPDATE) VALUES(?,?,";
       int j = supportLanguage.size();
       for (int i = 0; i < j; i++) {
         insertSql = insertSql + "?,";
       }
       insertSql = insertSql + "?)";
       PreparedStatement psInsert = connection.prepareStatement(insertSql);
-      psInsert.setLong(1, new Date().getTime() * 1000 + new Random().nextInt(1000));
-      int m = 2;
+      psInsert.setString(1, LanguageIdUtil.generateId());
+      psInsert.setString(2, isJS);
+      int m = 3;
       for (String lang : supportLanguage.keySet()) {
-        psInsert.setString(m, transApi.getTransResult(message, "zh", lang));
+        psInsert.setString(m, transApi.getTransResult(message, "auto", lang.toLowerCase()));
         m++;
       }
+      psInsert.setDate(m, new java.sql.Date(new Date().getTime()));
       psInsert.execute();
       return id;
     } else {
-      return rs.getLong("ID");
+      if ("0".equals(rs.getString("ISJS")) && "1".equals(rs.getString("ISJS"))) {
+        String updateSql =
+            "UPDATE " + TABLE_TRANSLATE + " SET ISJS = ?, LASTUPDATE = ? WHERE ID = ?";
+        PreparedStatement psUpdate = connection.prepareStatement(updateSql);
+        psUpdate.setString(1, isJS);
+        psUpdate.setDate(2, new java.sql.Date(new Date().getTime()));
+        psUpdate.setString(3, rs.getString("ID"));
+        psUpdate.executeUpdate();
+      }
+      return rs.getString("ID");
     }
   }
 
@@ -100,7 +111,7 @@ public class DbUtil {
     PreparedStatement pstmt = connection.prepareStatement(selectSql);
     ResultSet rs = pstmt.executeQuery();
     while (rs.next()) {
-      long id = insert(rs.getString("SP02"));
+      String id = insert(rs.getString("SP02"), "0");
       String insertSql = "INSERT SYS_FACECTRLPROP(SP00,SP01,SP02) VALUES(?,'TRANSLATE',?)";
       PreparedStatement preparedStatement = connection.prepareStatement(insertSql);
       preparedStatement.setLong(1, rs.getLong("SP00"));

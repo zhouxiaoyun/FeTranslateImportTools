@@ -40,13 +40,14 @@ public class ProjectImport {
 
   public void findCn(File file) throws IOException, SQLException {
     if (file.isFile()) {
+      String isJS = file.getName().endsWith(".js") ? "1" : "0";
       Pattern pattern = Pattern.compile("(\"[\u4e00-\u9fa5]{1,}\")|(\'[\u4e00-\u9fa5]{1,}\')");
       BufferedReader reader = new BufferedReader(new FileReader(file));
       String line = null;
       while ((line = reader.readLine()) != null) {
         Matcher m = pattern.matcher(line);
         if (m.find()) {
-          dbUtil.insert(m.group().substring(1, m.group().length() - 1));
+          dbUtil.insert(m.group().substring(1, m.group().length() - 1), isJS);
         }
       }
     }
