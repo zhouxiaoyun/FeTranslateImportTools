@@ -15,7 +15,10 @@ public class FeAllImport {
     ConfigurationModel configurationModel= fileUtil.readConfigurationModel();
     DbUtil dbUtil = new DbUtil(configurationModel);
 
-    ProjectImport projectImport = new ProjectImport(dbUtil);
-    projectImport.languageImport(projectPath);
+//    ProjectImport projectImport = new ProjectImport(dbUtil);
+//    projectImport.languageImport(projectPath);
+
+    FormImport formImport = new FormImport(dbUtil);
+    formImport.languageImport();
   }
 }
