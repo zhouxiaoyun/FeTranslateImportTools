@@ -1,6 +1,7 @@
 package com.zhkeen.flyrise.fe.translate.util;
 
 import com.zhkeen.flyrise.fe.translate.model.ConfigurationModel;
+import com.zhkeen.flyrise.fe.translate.model.TranslateResultModel;
 import com.zhkeen.flyrise.fe.translate.util.baidu.TransApi;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
@@ -9,12 +10,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class DbUtil {
 
   private static final String TABLE_TRANSLATE = "TRANSLATE";
+  private static final String TABLE_TRANSLATE_RELATE = "TRANSLATE_RELATE";
   private TransApi transApi;
   private Connection connection;
   private String defaultLanguage;
@@ -34,6 +36,77 @@ public class DbUtil {
     Connection connection = DriverManager
         .getConnection(model.getJdbcUrl(), model.getJdbcUserName(), model.getJdbcPassword());
     return connection;
+  }
+
+  public TranslateResultModel findByMessage(String defaultLanguage, String message,
+      Map<String, String> supportLanguageMap) throws SQLException, ClassNotFoundException {
+    String langFields = getSearchField(supportLanguageMap);
+    String selectSql = String
+        .format("SELECT ID, %s FROM %s WHERE %s = ?", langFields, TABLE_TRANSLATE,
+            defaultLanguage);
+    PreparedStatement pstmt = connection.prepareStatement(selectSql);
+    pstmt.setString(1, message);
+    ResultSet rs = pstmt.executeQuery();
+    TranslateResultModel model = buildResultModel(rs, supportLanguageMap);
+    return model;
+  }
+
+  public void update(TranslateResultModel model) throws SQLException, ClassNotFoundException {
+    String selectSql = String
+        .format("SELECT ID FROM %s WHERE ID = ?", TABLE_TRANSLATE);
+    PreparedStatement pstmt = connection.prepareStatement(selectSql);
+    pstmt.setString(1, model.getId());
+    ResultSet rs = pstmt.executeQuery();
+
+    if (rs.next()) {
+      String updateSql = "UPDATE " + TABLE_TRANSLATE + " SET ";
+      for (String lang : model.getTranslateMap().keySet()) {
+        updateSql = updateSql + " " + lang + " = ?,";
+      }
+      updateSql = updateSql + " LASTUPDATE = ? WHERE ID = ?";
+      PreparedStatement psUpdate = connection.prepareStatement(updateSql);
+      int i = 1;
+      for (String lang : model.getTranslateMap().keySet()) {
+        psUpdate.setString(i, model.getTranslateMap().get(lang));
+        i++;
+      }
+      psUpdate.setDate(i, model.getLastUpdate());
+      psUpdate.setString(i + 1, model.getId());
+      psUpdate.executeUpdate();
+    } else {
+      String insertSql =
+          "INSERT INTO " + TABLE_TRANSLATE + "(ID, " + getSearchField(model.getTranslateMap())
+              + ", LASTUPDATE) VALUES(?,";
+      int j = model.getTranslateMap().size();
+      for (int i = 0; i < j; i++) {
+        insertSql = insertSql + "?,";
+      }
+      insertSql = insertSql + "?)";
+      PreparedStatement psInsert = connection.prepareStatement(insertSql);
+      psInsert.setString(1, model.getId());
+      int m = 2;
+      for (String lang : model.getTranslateMap().keySet()) {
+        psInsert.setString(m, model.getTranslateMap().get(lang));
+        m++;
+      }
+      psInsert.setDate(m, model.getLastUpdate());
+      psInsert.execute();
+    }
+    if (StringUtils.isNotEmpty(model.getFileType()) && StringUtils
+        .isNotEmpty(model.getFileName())) {
+      String updateRelate = String.format(
+          " IF NOT EXISTS (SELECT ID FROM %s WHERE ID = ? AND RELATE_TYPE = ? AND RELATION = ?)  BEGIN INSERT INTO %s(ID, RELATE_TYPE, RELATION) VALUES(?, ?, ?) END",
+          TABLE_TRANSLATE_RELATE, TABLE_TRANSLATE_RELATE);
+
+      PreparedStatement psUpdateRelate = connection.prepareStatement(updateRelate);
+      psUpdateRelate.setString(1, model.getId());
+      psUpdateRelate.setString(2, model.getFileType());
+      psUpdateRelate.setString(3, model.getFileName());
+      psUpdateRelate.setString(4, model.getId());
+      psUpdateRelate.setString(5, model.getFileType());
+      psUpdateRelate.setString(6, model.getFileName());
+      psUpdateRelate.execute();
+    }
   }
 
   public String insert(String message, String isJS)
@@ -117,6 +190,24 @@ public class DbUtil {
       preparedStatement.setLong(1, rs.getLong("SP00"));
       preparedStatement.setString(2, String.valueOf(id));
       preparedStatement.execute();
+    }
+  }
+
+  private TranslateResultModel buildResultModel(ResultSet rs,
+      Map<String, String> supportLanguageMap)
+      throws SQLException {
+    if (rs.next()) {
+      TranslateResultModel model = new TranslateResultModel();
+      Map<String, String> map = new LinkedHashMap<>();
+      model.setId(rs.getString("ID"));
+      for (String lang : supportLanguageMap.keySet()) {
+        map.put(lang, rs.getString(lang));
+      }
+      model.setLastUpdate(rs.getDate("LASTUPDATE"));
+      model.setTranslateMap(map);
+      return model;
+    } else {
+      return null;
     }
   }
 

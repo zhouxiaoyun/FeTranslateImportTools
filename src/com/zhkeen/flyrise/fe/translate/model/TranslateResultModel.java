@@ -8,22 +8,11 @@ import java.util.Map;
  */
 public class TranslateResultModel {
 
-  /**
-   * 编号
-   */
   private String id;
-  /**
-   * 是否包含在JS文件中
-   */
-  private String isJs;
-  /**
-   * 翻译MAP，语言种类-翻译结果
-   */
   private Map<String, String> translateMap;
-  /**
-   * 最后更新时间，方便维护时按逆序排列
-   */
   private Date lastUpdate;
+  private String fileType;
+  private String fileName;
 
   public String getId() {
     return id;
@@ -31,14 +20,6 @@ public class TranslateResultModel {
 
   public void setId(String id) {
     this.id = id;
-  }
-
-  public String getIsJs() {
-    return isJs;
-  }
-
-  public void setIsJs(String isJs) {
-    this.isJs = isJs;
   }
 
   public Map<String, String> getTranslateMap() {
@@ -55,5 +36,21 @@ public class TranslateResultModel {
 
   public void setLastUpdate(Date lastUpdate) {
     this.lastUpdate = lastUpdate;
+  }
+
+  public String getFileType() {
+    return fileType;
+  }
+
+  public void setFileType(String fileType) {
+    this.fileType = fileType;
+  }
+
+  public String getFileName() {
+    return fileName;
+  }
+
+  public void setFileName(String fileName) {
+    this.fileName = fileName;
   }
 }
