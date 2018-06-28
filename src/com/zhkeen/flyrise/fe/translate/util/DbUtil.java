@@ -32,12 +32,15 @@ public class DbUtil {
         ResultSet rs = pstmt.executeQuery();
         while (rs.next()) {
             String message = rs.getString(1);
-            insertMessage(message);
+            if (message != null && message.length() > 0) {
+                insertMessage(message);
+            }
         }
     }
 
     public void insertMessage(String message)
             throws SQLException, ClassNotFoundException, UnsupportedEncodingException {
+        System.out.println(message);
         TranslateResultModel translateResultModel = findByMessage(message);
         if (translateResultModel == null) {
             translateResultModel = new TranslateResultModel();

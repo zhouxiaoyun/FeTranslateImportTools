@@ -15,6 +15,10 @@ public class Main {
         ConfigModel configModel = fileUtil.readConfigurationModel();
         DbUtil dbUtil = new DbUtil(configModel);
         dbUtil.translate("Select distinct SF02 from FE_BASE5..SYS_FUNCTION");
+        dbUtil.translate("select distinct NAME from FE_BASE5..DESKTOP_MENU_MANAGEMENT");
+        dbUtil.translate("select distinct SE09 from FE_BASE5..SYS_EVENT");
+        dbUtil.translate("Select distinct SI02 from FE_BASE5..SORT_INFOR");
+
 
     }
 }
